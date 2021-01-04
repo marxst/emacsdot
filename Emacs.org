@@ -1,3 +1,10 @@
+
+#+TITLE:  My documented Emacs configuration
+#+PROPERTY: header-args:emacs-lisp :tangle ./init.el :mkdirp yes
+
+* Package setup
+#+begin_src emacs-lisp
+
 (require 'package)
 
 
@@ -16,8 +23,16 @@
 (require 'use-package)
 (setq use-package-always-ensure t)
 
-(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+#+end_src
 
+*  Basic UI configuration
+** make the ESC key somewhat useful and let it quit prompts
+#+begin_src emacs-lisp
+(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+#+end_src
+
+** get rid of some distractions
+#+begin_src emacs-lisp 
 (setq inhibit-startup-message t) ; No splash screen
 (scroll-bar-mode -1)    ; Disable visible scrollbar
 (tool-bar-mode -1)      ; Disable the toolbar
@@ -25,20 +40,32 @@
 (set-fringe-mode 10)    ; Give some breathing room
 (menu-bar-mode -1)      ; Disable the menu bar
 (setq visible-bell t)   ; Set up the visible bell
+#+end_src
 
+** Font settings in general
+#+begin_src emacs-lisp
 (set-face-attribute 'default nil :font "Fira Code Retina" :height 140)
 (set-face-attribute 'fixed-pitch nil :font "Fira Code Retina" :height 140)
 (set-face-attribute 'variable-pitch nil :font "Cantarell" :height 148 :weight 'regular)
-
+#+end_src
+ 
+** Line and column numbering
+#+begin_src emacs-lisp
 (column-number-mode)
 (global-display-line-numbers-mode t)
+#+end_src
 
+*** and some exceptions to it
+#+begin_src emacs-lisp
 (dolist (mode '(org-mode-hook
 		term-mode-hook
 		shell-mode-hook
              treemacs-mode-hook))
   (add-hook mode (lambda () (display-line-numbers-mode 0))))
+#+end_src
 
+** some eye candy with icons
+#+begin_src emacs-lisp
 (use-package all-the-icons
   :if (display-graphic-p)
   :commands all-the-icons-install-fonts
@@ -49,7 +76,10 @@
 (use-package all-the-icons-dired
   :if (display-graphic-p)
   :hook (dired-mode . all-the-icons-dired-mode))
+#+end_src
 
+** a proper modeline and some theme stuff
+#+begin_src emacs-lisp
 (use-package doom-modeline
   :ensure t
   :init (doom-modeline-mode 1)
@@ -57,10 +87,15 @@
 
 (use-package doom-themes
   :init (load-theme 'doom-dracula t))
+#+end_src
 
+** and to see the levels of nesting parentheses and such
+#+begin_src emacs-lisp
 (use-package rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
-
+#+end_src
+** Hydra for text scaling
+#+begin_src emacs-lisp
 (use-package hydra)
 
 (defhydra hydra-text-scale (:timeout 4)
@@ -68,7 +103,10 @@
   ("j" text-scale-increase "in")
   ("k" text-scale-decrease "out")
   ("f" nil "finished" :exit t))
-
+#+end_src
+* Some real enhancements that make live easier 
+** swiper and ivy 
+#+begin_src emacs-lisp
 (use-package swiper)
 
 (use-package ivy
@@ -92,26 +130,34 @@
 (use-package ivy-rich
   :init
   (ivy-rich-mode 1))
-
+#+end_src
+** which key 
+#+begin_src emacs-lisp
 (use-package which-key
   :init (which-key-mode)
   :diminish which-key-mode
   :config
   (setq which-key-idle-delay 0.3))
-
+#+end_src
+** counsel
+#+begin_src emacs-lisp
 (use-package counsel
   :bind (("M-x" . counsel-M-x)
 	 ("C-x b" . counsel-ibuffer)
 	 ("C-x C-f" . counsel-find-file)
 	 :map minibuffer-local-map
 	 ("C-r" . 'counsel-minibuffer-history)))
-
+#+end_src
+** general 
+#+begin_src emacs-lisp
 (use-package general
   :ensure t
   :config
 (general-define-key
  "C-M-j" 'counsel-switch-buffer))
-
+#+end_src
+** helpful is very helpful
+#+begin_src emacs-lisp
 (use-package helpful
   :ensure t
   :custom
@@ -122,12 +168,21 @@
   ([remap describe-command] . helpful-command)
   ([remap describe-variable] . counsel-describe-variable)
   ([remap describe-key] . helpful-key))
+#+end_src
+* Org mode 
+
+** which languages we want to use with verbatim programming
+#+begin_src emacs-lisp
 
 (org-babel-do-load-languages
   'org-babel-load-languages
   '((emacs-lisp . t)
     (python . t)))
 
+#+end_src
+
+** Auto tangle the config files
+#+begin_src emacs-lisp
 (defun efs/org-babel-tangle-config ()
   (when (string-equal (buffer-file-name)
                                  (expand-file-name "~/.emacs.d/Emacs.org"))
@@ -135,6 +190,12 @@
       (org-babel-tangle))))
 
 (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
+#+end_src
+
+** General setup
+
+*** some functions first
+#+begin_src emacs-lisp
 
 (defun efs/org-mode-setup ()
   (org-indent-mode)
@@ -166,7 +227,10 @@
   (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
   (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
   (set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch))
+#+end_src
 
+*** now the package config itself
+#+begin_src emacs-lisp
 (use-package org
   :hook (org-mode . efs/org-mode-setup)
   :config
@@ -293,6 +357,11 @@
   
   (efs/org-font-setup))
 
+#+end_src
+
+*** and some more eyecandy
+#+begin_src emacs-lisp
+
 (use-package org-bullets
   :after org
   :hook (org-mode . org-bullets-mode)
@@ -307,6 +376,14 @@
 (use-package visual-fill-column
   :hook (org-mode . efs/org-mode-visual-fill))
 
+#+end_src
+
+* Development 
+
+** Languages
+
+*** Language Servers
+#+begin_src emacs-lisp
 (defun efs/lsp-mode-setup ()
   (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
   (lsp-headerline-breadcrumb-mode))
@@ -318,17 +395,29 @@
   (setq lsp-keymap-prefix "C-c l")  ;; Or 'C-l', 's-l'
   :config
   (lsp-enable-which-key-integration t))
+#+end_src
 
+*** lsp-ui
+#+begin_src emacs-lisp
 (use-package lsp-ui
   :hook (lsp-mode . lsp-ui-mode)
   :custom
   (lsp-ui-doc-position 'bottom))
+#+end_src
 
+*** lsp-treemacs
+#+begin_src emacs-lisp
 (use-package lsp-treemacs
   :after lsp)
+#+end_src
 
+*** lsp-ivy
+#+begin_src emacs-lisp
 (use-package lsp-ivy)
+#+end_src
 
+*** Company mode
+#+begin_src emacs-lisp
 (use-package company
   :after lsp-mode
   :hook (lsp-mode . company-mode)
@@ -343,14 +432,22 @@
 (use-package company-box
   :hook (company-mode . company-box-mode))
 
+#+end_src
+
+*** commenting stuff
+#+begin_src emacs-lisp
 (use-package evil-nerd-commenter
   :bind ("M-/" . evilnc-comment-or-uncomment-lines))
-
+#+end_src
+** Magit 
+#+begin_src emacs-lisp
 (use-package magit
   :commands (magit-status magit-get-current-branch)
   :custom
   (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
-
+#+end_src
+** Projectile
+#+begin_src emacs-lisp
 (use-package projectile
   :diminish projectile-mode
   :config (projectile-mode)
@@ -364,3 +461,4 @@
 
 (use-package counsel-projectile
   :config (counsel-projectile-mode))
+#+end_src
