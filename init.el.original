@@ -1,3 +1,46 @@
+(setq inhibit-startup-message t) ; No splash screen
+
+(scroll-bar-mode -1)    ; Disable visible scrollbar
+(tool-bar-mode -1)      ; Disable the toolbar
+(tooltip-mode -1)       ; Disable tooltips
+(set-fringe-mode 10)    ; Give some breathing room
+(menu-bar-mode -1)      ; Disable the menu bar
+(setq visible-bell t)   ; Set up the visible bell
+
+;; The annoying automated filled in custom variable stuff
+
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   '("e6ff132edb1bfa0645e2ba032c44ce94a3bd3c15e3929cdf6c049802cf059a2a" default))
+ '(package-selected-packages
+   '(visual-fill-column hydra org-bullets magit counsel-projectile projectile general which-key use-package rainbow-delimiters ivy-rich helpful doom-themes doom-modeline counsel command-log-mode all-the-icons-dired)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+
+;; Font Configuration ----------------------------------------------------------
+
+(set-face-attribute 'default nil :font "Fira Code Retina" :height 140)
+
+;; Set the fixed pitch face
+(set-face-attribute 'fixed-pitch nil :font "Fira Code Retina" :height 140)
+
+;; Set the variable pitch face
+(set-face-attribute 'variable-pitch nil :font "Cantarell" :height 148 :weight 'regular)
+
+
+
+;; Make ESC quit prompts
+(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+
+;; initialize package sources
 (require 'package)
 
 
@@ -16,29 +59,12 @@
 (require 'use-package)
 (setq use-package-always-ensure t)
 
-(setq inhibit-x-resources t)
-
-(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
-
-(setq inhibit-startup-message t) ; No splash screen
-(scroll-bar-mode -1)    ; Disable visible scrollbar
-(tool-bar-mode -1)      ; Disable the toolbar
-(tooltip-mode -1)       ; Disable tooltips
-(set-fringe-mode 10)    ; Give some breathing room
-(menu-bar-mode -1)      ; Disable the menu bar
-(setq visible-bell t)   ; Set up the visible bell
-
-(set-face-attribute 'default nil :font "Fira Code Retina" :height 140)
-(set-face-attribute 'fixed-pitch nil :font "Fira Code Retina" :height 140)
-(set-face-attribute 'variable-pitch nil :font "Cantarell" :height 148 :weight 'regular)
-
 (column-number-mode)
 (global-display-line-numbers-mode t)
-
+;; Disable line numbers for some modes
 (dolist (mode '(org-mode-hook
 		term-mode-hook
-		shell-mode-hook
-             treemacs-mode-hook))
+		shell-mode-hook))
   (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
 (use-package all-the-icons
@@ -52,24 +78,8 @@
   :if (display-graphic-p)
   :hook (dired-mode . all-the-icons-dired-mode))
 
-(use-package doom-modeline
-  :ensure t
-  :init (doom-modeline-mode 1)
-  :custom ((doom-modeline-height 15)))
 
-(use-package doom-themes
-  :init (load-theme 'doom-dracula t))
-
-(use-package rainbow-delimiters
-  :hook (prog-mode . rainbow-delimiters-mode))
-
-(use-package hydra)
-
-(defhydra hydra-text-scale (:timeout 4)
-  "scale text"
-  ("j" text-scale-increase "in")
-  ("k" text-scale-decrease "out")
-  ("f" nil "finished" :exit t))
+(use-package command-log-mode)
 
 (use-package swiper)
 
@@ -91,9 +101,18 @@
   :config
   (ivy-mode 1))
 
-(use-package ivy-rich
-  :init
-  (ivy-rich-mode 1))
+(use-package doom-modeline
+  :ensure t
+  :init (doom-modeline-mode 1)
+  :custom ((doom-modeline-height 15)))
+
+(use-package doom-themes
+  :init (load-theme 'doom-gruvbox t))
+
+
+
+(use-package rainbow-delimiters
+  :hook (prog-mode . rainbow-delimiters-mode))
 
 (use-package which-key
   :init (which-key-mode)
@@ -101,18 +120,16 @@
   :config
   (setq which-key-idle-delay 0.3))
 
+(use-package ivy-rich
+  :init
+  (ivy-rich-mode 1))
+
 (use-package counsel
   :bind (("M-x" . counsel-M-x)
 	 ("C-x b" . counsel-ibuffer)
 	 ("C-x C-f" . counsel-find-file)
 	 :map minibuffer-local-map
 	 ("C-r" . 'counsel-minibuffer-history)))
-
-(use-package general
-  :ensure t
-  :config
-(general-define-key
- "C-M-j" 'counsel-switch-buffer))
 
 (use-package helpful
   :ensure t
@@ -125,18 +142,38 @@
   ([remap describe-variable] . counsel-describe-variable)
   ([remap describe-key] . helpful-key))
 
-(org-babel-do-load-languages
-  'org-babel-load-languages
-  '((emacs-lisp . t)
-    (python . t)))
+(use-package general
+  :ensure t
+  :config
+(general-define-key
+ "C-M-j" 'counsel-switch-buffer))
 
-(defun efs/org-babel-tangle-config ()
-  (when (string-equal (buffer-file-name)
-                                 (expand-file-name "~/.emacs.d/Emacs.org"))
-    (let ((org-confirm-babel-evaluate nil))
-      (org-babel-tangle))))
+(use-package hydra)
 
-(add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
+(defhydra hydra-text-scale (:timeout 4)
+  "scale text"
+  ("j" text-scale-increase "in")
+  ("k" text-scale-decrease "out")
+  ("f" nil "finished" :exit t))
+
+(use-package projectile
+  :diminish projectile-mode
+  :config (projectile-mode)
+  :custom((projectile-completion-system 'ivy))
+  :bind-keymap
+  ("C-c p" . projectile-command-map)
+  :init
+  (when (file-directory-p "~/Projects")
+    (setq projectile-project-search-path '("~/Projects")))
+  (setq projectile-switch-project-action #'projectile-dired))
+
+(use-package counsel-projectile
+  :config (counsel-projectile-mode))
+
+(use-package magit
+  :commands (magit-status magit-get-current-branch)
+  :custom
+  (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
 
 (defun efs/org-mode-setup ()
   (org-indent-mode)
@@ -308,80 +345,3 @@
 
 (use-package visual-fill-column
   :hook (org-mode . efs/org-mode-visual-fill))
-
-(defun efs/lsp-mode-setup ()
-  (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
-  (lsp-headerline-breadcrumb-mode))
-
-(use-package lsp-mode
-  :commands (lsp lsp-deferred)
-  :hook (lsp-mode . efs/lsp-mode-setup)
-  :init
-  (setq lsp-keymap-prefix "C-c l")  ;; Or 'C-l', 's-l'
-  :config
-  (lsp-enable-which-key-integration t))
-
-(use-package lsp-ui
-  :hook (lsp-mode . lsp-ui-mode)
-  :custom
-  (lsp-ui-doc-position 'bottom))
-
-(use-package lsp-treemacs
-  :after lsp)
-
-(use-package lsp-ivy)
-
-(use-package dap-mode)
-
-(use-package lsp-python-ms
-  :ensure t
-  :init (setq lsp-python-ms-auto-install-server t))
-  
-(use-package python-mode
-  :ensure t
-  :hook (python-mode . (lambda ()
-                          (require 'lsp-python-ms)
-                          (lsp-deferred)))
-  :custom
-  ;; NOTE: Set these if Python 3 is called "python3" on your system!
-  ;; (python-shell-interpreter "python3")
-  ;; (dap-python-executable "python3")
-  (dap-python-debugger 'debugpy)
-  :config
-  (require 'dap-python))
-
-(use-package company
-  :after lsp-mode
-  :hook (lsp-mode . company-mode)
-  :bind (:map company-active-map
-         ("<tab>" . company-complete-selection))
-        (:map lsp-mode-map
-         ("<tab>" . company-indent-or-complete-common))
-  :custom
-  (company-minimum-prefix-length 1)
-  (company-idle-delay 0.0))
-
-(use-package company-box
-  :hook (company-mode . company-box-mode))
-
-(use-package evil-nerd-commenter
-  :bind ("M-/" . evilnc-comment-or-uncomment-lines))
-
-(use-package magit
-  :commands (magit-status magit-get-current-branch)
-  :custom
-  (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
-
-(use-package projectile
-  :diminish projectile-mode
-  :config (projectile-mode)
-  :custom((projectile-completion-system 'ivy))
-  :bind-keymap
-  ("C-c p" . projectile-command-map)
-  :init
-  (when (file-directory-p "~/Projects")
-    (setq projectile-project-search-path '("~/Projects")))
-  (setq projectile-switch-project-action #'projectile-dired))
-
-(use-package counsel-projectile
-  :config (counsel-projectile-mode))

@@ -16,8 +16,6 @@
 (require 'use-package)
 (setq use-package-always-ensure t)
 
-(setq inhibit-x-resources t)
-
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 
 (setq inhibit-startup-message t) ; No splash screen
@@ -37,8 +35,7 @@
 
 (dolist (mode '(org-mode-hook
 		term-mode-hook
-		shell-mode-hook
-             treemacs-mode-hook))
+		shell-mode-hook))
   (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
 (use-package all-the-icons
@@ -134,7 +131,7 @@
   (when (string-equal (buffer-file-name)
                                  (expand-file-name "~/.emacs.d/Emacs.org"))
     (let ((org-confirm-babel-evaluate nil))
-      (org-babel-tangle))))
+      (org-babel-tangle)))
 
 (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
 
@@ -308,64 +305,6 @@
 
 (use-package visual-fill-column
   :hook (org-mode . efs/org-mode-visual-fill))
-
-(defun efs/lsp-mode-setup ()
-  (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
-  (lsp-headerline-breadcrumb-mode))
-
-(use-package lsp-mode
-  :commands (lsp lsp-deferred)
-  :hook (lsp-mode . efs/lsp-mode-setup)
-  :init
-  (setq lsp-keymap-prefix "C-c l")  ;; Or 'C-l', 's-l'
-  :config
-  (lsp-enable-which-key-integration t))
-
-(use-package lsp-ui
-  :hook (lsp-mode . lsp-ui-mode)
-  :custom
-  (lsp-ui-doc-position 'bottom))
-
-(use-package lsp-treemacs
-  :after lsp)
-
-(use-package lsp-ivy)
-
-(use-package dap-mode)
-
-(use-package lsp-python-ms
-  :ensure t
-  :init (setq lsp-python-ms-auto-install-server t))
-  
-(use-package python-mode
-  :ensure t
-  :hook (python-mode . (lambda ()
-                          (require 'lsp-python-ms)
-                          (lsp-deferred)))
-  :custom
-  ;; NOTE: Set these if Python 3 is called "python3" on your system!
-  ;; (python-shell-interpreter "python3")
-  ;; (dap-python-executable "python3")
-  (dap-python-debugger 'debugpy)
-  :config
-  (require 'dap-python))
-
-(use-package company
-  :after lsp-mode
-  :hook (lsp-mode . company-mode)
-  :bind (:map company-active-map
-         ("<tab>" . company-complete-selection))
-        (:map lsp-mode-map
-         ("<tab>" . company-indent-or-complete-common))
-  :custom
-  (company-minimum-prefix-length 1)
-  (company-idle-delay 0.0))
-
-(use-package company-box
-  :hook (company-mode . company-box-mode))
-
-(use-package evil-nerd-commenter
-  :bind ("M-/" . evilnc-comment-or-uncomment-lines))
 
 (use-package magit
   :commands (magit-status magit-get-current-branch)
