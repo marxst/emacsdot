@@ -3,3 +3,6 @@ projectile*
 elpa/
 auto-save-list
 *~
+url/*
+eshell/*
+tramp/*
